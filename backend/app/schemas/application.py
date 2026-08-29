@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 from app.schemas.company import ApplicantDescription
-from app.schemas.evidence import Evidence
+from app.schemas.evidence import Evidence, TranscriptionResult
 from app.schemas.gaps import InformationGap
 from app.schemas.impact import ImpactProtocolDraft
 from app.schemas.intervention import InterventionRequest
@@ -38,6 +38,8 @@ class ApplicationResponse(BaseModel):
     application: ApplicationData
 
     impact_protocol: ImpactProtocolDraft
+
+    transcript: TranscriptionResult | None = None
 
     files: ApplicationFiles
 

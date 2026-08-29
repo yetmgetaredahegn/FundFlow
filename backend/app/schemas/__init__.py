@@ -17,7 +17,7 @@ from app.schemas.company import (
     ProductService,
     ProductUniqueness,
 )
-from app.schemas.evidence import Evidence
+from app.schemas.evidence import Evidence, TranscriptionResult
 from app.schemas.gaps import InformationGap
 from app.schemas.impact import (
     ImpactProtocolDraft,
@@ -57,4 +57,5 @@ __all__ = [
     "ProductUniqueness",
     "RequestedConsultant",
     "RequestedEquipment",
+    "TranscriptionResult",
 ]
