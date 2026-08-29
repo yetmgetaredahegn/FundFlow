@@ -1,5 +1,7 @@
-from fastapi import HTTPException, UploadFile
+from pathlib import Path
+from tempfile import NamedTemporaryFile
 
+from fastapi import HTTPException, UploadFile
 from app.schemas import (
     ApplicantDescription,
     ApplicationData,
@@ -26,6 +28,26 @@ from app.schemas import (
     RequestedEquipment,
 )
 
+
+async def save_upload_to_temporary_file(
+    upload_file: UploadFile,
+) -> Path:
+    """
+    Persist an uploaded file temporarily and return its filesystem path.
+
+    The returned path can be passed to processing services that should
+    remain independent from FastAPI's UploadFile abstraction.
+    """
+    suffix = Path(upload_file.filename or "").suffix
+
+    with NamedTemporaryFile(
+        delete=False,
+        suffix=suffix,
+    ) as temporary_file:
+        content = await upload_file.read()
+        temporary_file.write(content)
+
+        return Path(temporary_file.name)
 
 async def process_application(
     audio_file: UploadFile,
