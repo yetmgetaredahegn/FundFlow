@@ -1,14 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from app.schemas.common import Gap
-
-
-class ApplicationData(BaseModel):
-    business_name: str | None = None
-    applicant_name: str | None = None
-    location: str | None = None
-    sector: str | None = None
-    funding_target_etb: float | None = None
+from app.schemas.company import ApplicantDescription
+from app.schemas.evidence import Evidence
+from app.schemas.gaps import InformationGap
+from app.schemas.impact import ImpactProtocolDraft
+from app.schemas.intervention import InterventionRequest
 
 
 class FileMetadata(BaseModel):
@@ -22,8 +18,29 @@ class ApplicationFiles(BaseModel):
     workshop: FileMetadata
 
 
+class ApplicationData(BaseModel):
+    applicant: ApplicantDescription = Field(
+        default_factory=ApplicantDescription
+    )
+
+    intervention: InterventionRequest = Field(
+        default_factory=InterventionRequest
+    )
+
+    evidence: list[Evidence] = Field(
+        default_factory=list
+    )
+
+
 class ApplicationResponse(BaseModel):
     status: str
+
     application: ApplicationData
+
+    impact_protocol: ImpactProtocolDraft
+
     files: ApplicationFiles
-    gaps: list[Gap]
+
+    gaps: list[InformationGap] = Field(
+        default_factory=list
+    )

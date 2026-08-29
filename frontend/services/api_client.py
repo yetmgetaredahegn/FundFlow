@@ -4,17 +4,6 @@ import requests
 API_BASE_URL = "http://127.0.0.1:8000"
 
 
-def check_backend_health():
-    response = requests.get(
-        f"{API_BASE_URL}/health",
-        timeout=5,
-    )
-
-    response.raise_for_status()
-
-    return response.json()
-
-
 def process_application(
     audio_file,
     license_image,
