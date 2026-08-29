@@ -1,11 +1,29 @@
 from fastapi import HTTPException, UploadFile
 
 from app.schemas import (
+    ApplicantDescription,
     ApplicationData,
     ApplicationFiles,
     ApplicationResponse,
+    BusinessOrganization,
+    CompanyManagement,
+    CompanyOverview,
+    CompanyOwnership,
+    CompanyProfile,
+    Evidence,
+    ExpectedResult,
     FileMetadata,
+    Gender,
+    GrowthIndicator,
     ImpactProtocolDraft,
+    InformationGap,
+    InterventionRequest,
+    JobPosition,
+    ManagementTeamMember,
+    Milestone,
+    ProductService,
+    ProductUniqueness,
+    RequestedEquipment,
 )
 
 
@@ -20,28 +38,260 @@ async def process_application(
         workshop_image=workshop_image,
     )
 
-    return ApplicationResponse(
-        status="received",
-        application=ApplicationData(),
-        impact_protocol=ImpactProtocolDraft(),
-        files=ApplicationFiles(
-            audio=FileMetadata(
-                filename=audio_file.filename or "unknown",
-                content_type=audio_file.content_type
-                or "unknown",
-            ),
-            license=FileMetadata(
-                filename=license_image.filename or "unknown",
-                content_type=license_image.content_type
-                or "unknown",
-            ),
-            workshop=FileMetadata(
-                filename=workshop_image.filename or "unknown",
-                content_type=workshop_image.content_type
-                or "unknown",
-            ),
+    application = build_mock_application()
+
+    files = ApplicationFiles(
+        audio=FileMetadata(
+            filename=audio_file.filename or "unknown",
+            content_type=audio_file.content_type or "unknown",
+        ),
+        license=FileMetadata(
+            filename=license_image.filename or "unknown",
+            content_type=license_image.content_type or "unknown",
+        ),
+        workshop=FileMetadata(
+            filename=workshop_image.filename or "unknown",
+            content_type=workshop_image.content_type or "unknown",
         ),
     )
+
+    impact_protocol = build_mock_impact_protocol()
+
+    gaps = build_mock_information_gaps()
+
+    return ApplicationResponse(
+        status="processed",
+        application=application,
+        impact_protocol=impact_protocol,
+        files=files,
+        gaps=gaps,
+    )
+
+
+def build_mock_application() -> ApplicationData:
+    return ApplicationData(
+        applicant=ApplicantDescription(
+            company_profile=CompanyProfile(
+                company_name="Mock Spice Processing Enterprise",
+                business_registration_number="REG-MOCK-001",
+                address="Bekoji, Oromia",
+                mobile_number="+251911000000",
+                form_of_business_organization=(
+                    BusinessOrganization.SOLE_PROPRIETORSHIP
+                ),
+                number_of_years_in_operation=4,
+                type_of_business="Food processing",
+                ownership=CompanyOwnership(
+                    women_percentage=100,
+                    men_percentage=0,
+                ),
+            ),
+            company_overview=CompanyOverview(
+                description=(
+                    "A small spice processing business producing "
+                    "and packaging berbere for local retailers."
+                ),
+                growth_indicators=[
+                    GrowthIndicator(
+                        year=2022,
+                        sales_etb=300000,
+                        total_employees=4,
+                        female_employees=3,
+                        youth_employees_18_24=1,
+                    ),
+                    GrowthIndicator(
+                        year=2023,
+                        sales_etb=420000,
+                        total_employees=5,
+                        female_employees=4,
+                        youth_employees_18_24=1,
+                    ),
+                    GrowthIndicator(
+                        year=2024,
+                        sales_etb=600000,
+                        total_employees=8,
+                        female_employees=6,
+                        youth_employees_18_24=2,
+                    ),
+                ],
+            ),
+            motivation=(
+                "The business wants to improve production capacity "
+                "and reach additional markets."
+            ),
+            business_goals=(
+                "Increase production capacity in the short term and "
+                "expand distribution to additional towns."
+            ),
+            market_overview=(
+                "The business currently serves local retailers and "
+                "plans to expand into regional markets."
+            ),
+            products_services=[
+                ProductService(
+                    product_service="Packaged berbere",
+                    market_served="Local market",
+                    distribution_channels=(
+                        "Retail shops and direct sales"
+                    ),
+                ),
+            ],
+            product_uniqueness=(
+                ProductUniqueness.DIFFERENT_FROM_COMPETITORS
+            ),
+            local_raw_material_percentage=70,
+            management=CompanyManagement(
+                core_management_team=[
+                    ManagementTeamMember(
+                        name="Mock Applicant",
+                        position="Owner and Manager",
+                        gender=Gender.FEMALE,
+                    ),
+                ],
+            ),
+        ),
+        intervention=InterventionRequest(
+            problem_description=(
+                "Current production capacity is limited by "
+                "manual processing equipment."
+            ),
+            equipment=[
+                RequestedEquipment(
+                    description="Industrial spice grinder",
+                    quantity=1,
+                    estimated_total_price_etb=450000,
+                    purpose=(
+                        "Increase processing capacity and "
+                        "improve consistency."
+                    ),
+                ),
+            ],
+            expected_results=[
+                ExpectedResult.ENHANCING_PRODUCTION_CAPACITY,
+                ExpectedResult.IMPROVING_PRODUCT_SERVICE_QUALITY,
+                ExpectedResult.REACHING_NEW_MARKETS,
+            ],
+            expected_results_explanation=(
+                "New equipment is expected to increase production "
+                "capacity, improve consistency, and support "
+                "market expansion."
+            ),
+            job_creation_explanation=(
+                "The business expects to hire additional production "
+                "and packaging workers as demand increases."
+            ),
+            job_positions=[
+                JobPosition(
+                    job_position="Production worker",
+                    number_of_new_jobs=3,
+                ),
+                JobPosition(
+                    job_position="Packaging worker",
+                    number_of_new_jobs=2,
+                ),
+            ],
+            social_environmental_impact=(
+                "The business provides employment opportunities "
+                "for local workers, including women."
+            ),
+            osh_commitment=None,
+        ),
+        evidence=[
+            Evidence(
+                source="mock_audio",
+                value=(
+                    "Mock evidence generated for Milestone 1 "
+                    "schema testing."
+                ),
+            ),
+        ],
+    )
+
+
+def build_mock_impact_protocol() -> ImpactProtocolDraft:
+    return ImpactProtocolDraft(
+        title=(
+            "Expanding Local Spice Processing Capacity"
+        ),
+        location="Bekoji, Oromia",
+        sdgs=[
+            "SDG 5: Gender Equality",
+            "SDG 8: Decent Work and Economic Growth",
+        ],
+        funding_target_etb=450000,
+        beneficiaries=[
+            "Business owner",
+            "Current employees",
+            "New production workers",
+        ],
+        milestones=[
+            Milestone(
+                description="Acquire production equipment",
+                target="Month 3",
+            ),
+            Milestone(
+                description="Increase production capacity",
+                target="Month 6",
+            ),
+            Milestone(
+                description="Create additional jobs",
+                target="Month 12",
+            ),
+        ],
+        sector="Food processing",
+    )
+
+
+def build_mock_information_gaps() -> list[InformationGap]:
+    return [
+        InformationGap(
+            field="company_profile.email",
+            status="missing",
+            reason=(
+                "No email address has been established."
+            ),
+            required_evidence=(
+                "Applicant-provided email address."
+            ),
+            provider="Applicant",
+        ),
+        InformationGap(
+            field="company_management.organogram",
+            status="missing",
+            reason=(
+                "No organizational structure has been provided."
+            ),
+            required_evidence=(
+                "Current company organizational structure."
+            ),
+            provider="Applicant",
+        ),
+        InformationGap(
+            field="intervention.consultants",
+            status="missing",
+            reason=(
+                "No consultant support request has been established."
+            ),
+            required_evidence=(
+                "Description of the business challenge and "
+                "required technical expertise."
+            ),
+            provider="Applicant",
+        ),
+        InformationGap(
+            field="intervention.osh_commitment",
+            status="missing",
+            reason=(
+                "Occupational safety and health commitment "
+                "has not been established."
+            ),
+            required_evidence=(
+                "Applicant explanation of current and planned "
+                "OSH practices."
+            ),
+            provider="Applicant",
+        ),
+    ]
 
 
 def validate_file_types(

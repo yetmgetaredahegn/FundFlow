@@ -53,17 +53,20 @@ if (
                     workshop_image,
                 )
 
-            st.success("Application received.")
+                st.success("Application processed.")
 
-            st.subheader("Application")
-            st.json(result["application"])
+                st.subheader("Application")
+                st.json(result["application"])
 
-            st.subheader("Evidence")
-            st.json(result["files"])
+                st.subheader("ImpactProtocol draft")
+                st.json(result["impact_protocol"])
 
-            st.subheader("Information gaps")
-            st.json(result["gaps"])
+                st.subheader("Uploaded files")
+                st.json(result["files"])
 
+                st.subheader("Information gaps")
+                st.json(result["gaps"])
+                
         except requests.RequestException as error:
             st.error(
                 f"Could not process application: {error}"
