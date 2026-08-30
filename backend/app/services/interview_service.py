@@ -1,3 +1,5 @@
+import json
+
 from langchain_ollama import ChatOllama
 
 from app.schemas import (
@@ -60,10 +62,6 @@ def extract_answer(
     The model must not infer or invent information that is not clearly
     established by the applicant's transcript.
     """
-    structured_llm = llm.with_structured_output(
-        ExtractionResult
-    )
-
     prompt = f"""
 You are extracting one piece of information from an applicant's
 spoken answer for a funding application.
@@ -78,43 +76,39 @@ Applicant transcript:
 
 Extract only information relevant to the target field.
 
+Return only valid JSON with this exact structure:
+
+{{
+    "value": string or null,
+    "ambiguous": boolean
+}}
+
 Rules:
 - Do not invent or infer missing facts.
 - If the answer clearly establishes the requested value, return it.
-- If the requested information is not established, return null for value.
+- If the requested information is not established, return null for
+  value.
 - If the answer is vague or ambiguous, set ambiguous to true.
 - Do not extract information for other application fields.
-- Return the value in an appropriate simple form.
+- Do not include markdown or explanations.
 
-Examples:
-
-Example of a valid extraction:
+Example:
 
 {{
     "value": "Adama Furniture Manufacturing",
     "ambiguous": false
 }}
-
-Example of information that is not established:
-
-{{
-    "value": null,
-    "ambiguous": true
-}}
-
-For target field company_name:
-Transcript: "My business is Adama Furniture Manufacturing."
-
-The extracted value is the business name only, without unnecessary
-introductory words.
-
-For target field number_of_years_in_operation:
-Transcript: "We have been operating for several years."
-
-The number of years is not specifically established, so do not guess.
 """
 
-    return structured_llm.invoke(prompt)
+    response = llm.invoke(prompt)
+
+    raw_response = str(response.content)
+
+    parsed_response = json.loads(raw_response)
+
+    return ExtractionResult.model_validate(
+        parsed_response
+    )
 
 def start_interview() -> InterviewState:
     state = InterviewState()
