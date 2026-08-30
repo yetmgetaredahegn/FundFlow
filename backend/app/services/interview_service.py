@@ -200,10 +200,8 @@ def process_interview_answer(
             decision.follow_up_required
             and decision.next_question is not None
         ):
-            follow_up_field = (
-                decision.next_field
-                or current_question.field
-            )
+            # Enforce staying on the same field for follow-ups
+            follow_up_field = current_question.field
 
             state.current_question = InterviewQuestion(
                 field=follow_up_field,

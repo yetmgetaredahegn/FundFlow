@@ -134,6 +134,7 @@ INSTRUCTIONS:
 3. If the answer is insufficient or unclear, set follow_up_required to true
    and generate a follow-up question that explicitly states what the user just said, explains why it is confusing or insufficient, and asks for the specific missing detail.
    - You MUST put this follow-up question in the `next_question` JSON field.
+   - You MUST set `next_field` to the exact same field as the CURRENT field. Do not advance to a new field.
    - Example for company_name: "You mentioned 'Abebe', but that sounds like a personal name rather than a registered PLC or business name. Could you please provide the full legal name of your business?"
    - Example for description: "You mentioned 'we sell stuff', but I need to know the specific type of products or industry you are in. Could you clarify what exactly you sell?"
 4. If the answer is sufficient, choose the next MISSING field and write a
