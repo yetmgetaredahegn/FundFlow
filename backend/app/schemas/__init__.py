@@ -7,7 +7,7 @@ from app.schemas.application import (
 from app.schemas.interview import (
     InterviewAnswerResponse,
     InterviewQuestion,
-    InterviewStartResponse,
+
     InterviewState,
 )
 from app.schemas.extraction import ExtractionResult
@@ -68,6 +68,6 @@ __all__ = [
     "InterviewQuestion",
     "InterviewAnswerResponse",
     "InterviewState",
-    "InterviewStartResponse",
+
     "TranscriptionResult",
 ]
