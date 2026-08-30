@@ -64,9 +64,13 @@ if license_image and workshop_image:
             st.rerun()
 
         except requests.RequestException as error:
-            st.error(
-                f"Could not process application: {error}"
-            )
+            st.error("Could not process application.")
+            if error.response is not None:
+                try:
+                    error_data = error.response.json()
+                    st.error(error_data.get("detail", str(error_data)))
+                except ValueError:
+                    st.error(error.response.text)
 
 
 # ---------------------------------------------------------------------------

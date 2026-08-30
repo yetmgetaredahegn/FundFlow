@@ -49,6 +49,57 @@ async def save_upload_to_temporary_file(
 
         return Path(temporary_file.name)
 
+import logging
+import easyocr
+
+logger = logging.getLogger(__name__)
+
+# Lazy initialization of OCR reader
+_ocr_reader = None
+
+def get_ocr_reader():
+    global _ocr_reader
+    if _ocr_reader is None:
+        logger.info("Initializing EasyOCR reader (this may take a minute on first run to download models)...")
+        _ocr_reader = easyocr.Reader(['en'], verbose=False)
+    return _ocr_reader
+
+async def validate_license_image_ocr(license_image: UploadFile) -> None:
+    """Validate that the image contains some business license keywords."""
+    await license_image.seek(0)
+    img_bytes = await license_image.read()
+    await license_image.seek(0)
+
+    try:
+        reader = get_ocr_reader()
+        # Read text from image bytes
+        results = reader.readtext(img_bytes, detail=0)
+        text_content = " ".join(results).lower()
+        logger.info(f"OCR extracted text: {text_content}")
+
+        # Define keywords that indicate a valid license
+        keywords = [
+            "license", "licence", "registration", "trade",
+            "bureau", "certificate", "ethiopia", "business"
+        ]
+        
+        found = any(keyword in text_content for keyword in keywords)
+        
+        if not found:
+            logger.warning("OCR Validation Failed: No keywords found.")
+            raise HTTPException(
+                status_code=400,
+                detail="The uploaded document does not appear to be a valid business license. Please re-upload.",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"OCR processing failed: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail="Error scanning the image. Please ensure it is a clear photo of the license.",
+        )
+
 async def process_application(
     license_image: UploadFile,
     workshop_image: UploadFile,
@@ -57,6 +108,8 @@ async def process_application(
         license_image=license_image,
         workshop_image=workshop_image,
     )
+    
+    await validate_license_image_ocr(license_image)
 
     application = build_mock_application()
 

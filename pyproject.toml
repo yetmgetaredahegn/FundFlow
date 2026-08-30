@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "easyocr>=1.7.2",
     "fastapi>=0.141.1",
     "faster-whisper>=1.2.1",
     "kokoro>=0.9.4",
