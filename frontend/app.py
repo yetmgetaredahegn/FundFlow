@@ -79,29 +79,8 @@ application_result = st.session_state.get(
 
 
 if application_result:
-    st.subheader("Application")
+    st.success("Your application draft is ready.")
 
-    st.json(
-        application_result["application"]
-    )
-
-    st.subheader("ImpactProtocol draft")
-
-    st.json(
-        application_result["impact_protocol"]
-    )
-
-    st.subheader("Uploaded files")
-
-    st.json(
-        application_result["files"]
-    )
-
-    st.subheader("Information gaps")
-
-    st.json(
-        application_result["gaps"]
-    )
 
 
 # ---------------------------------------------------------------------------
