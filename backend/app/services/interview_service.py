@@ -127,13 +127,14 @@ def process_interview_answer(
     )
 
     # --- Apply extracted updates ---
-    for field, value in decision.extracted_updates.items():
-        if value is not None and field in ALLOWED_FIELDS:
-            update_application_field(
-                state=state,
-                field=field,
-                value=value,
-            )
+    if decision.answer_quality == "sufficient":
+        for field, value in decision.extracted_updates.items():
+            if value is not None and field in ALLOWED_FIELDS:
+                update_application_field(
+                    state=state,
+                    field=field,
+                    value=value,
+                )
 
     # --- Record evidence ---
     state.application.evidence.append(
