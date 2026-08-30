@@ -7,9 +7,10 @@ from app.schemas.application import (
 from app.schemas.interview import (
     InterviewAnswerResponse,
     InterviewQuestion,
-
     InterviewState,
+    InterviewTurn,
 )
+from app.schemas.interview_decision import InterviewDecision
 from app.schemas.extraction import ExtractionResult
 from app.schemas.company import (
     ApplicantDescription,
@@ -58,6 +59,11 @@ __all__ = [
     "ImpactProtocolDraft",
     "InformationGap",
     "InterventionRequest",
+    "InterviewAnswerResponse",
+    "InterviewDecision",
+    "InterviewQuestion",
+    "InterviewState",
+    "InterviewTurn",
     "JobPosition",
     "ManagementTeamMember",
     "Milestone",
@@ -65,9 +71,6 @@ __all__ = [
     "ProductUniqueness",
     "RequestedConsultant",
     "RequestedEquipment",
-    "InterviewQuestion",
-    "InterviewAnswerResponse",
-    "InterviewState",
-
     "TranscriptionResult",
 ]
+

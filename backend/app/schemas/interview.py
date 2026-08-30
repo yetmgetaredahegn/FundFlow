@@ -9,6 +9,13 @@ class InterviewQuestion(BaseModel):
     question: str
 
 
+class InterviewTurn(BaseModel):
+    """One question-answer exchange in the interview."""
+    field: str
+    question: str
+    transcript: str
+
+
 class InterviewState(BaseModel):
     application: ApplicationData = Field(
         default_factory=ApplicationData
@@ -18,6 +25,9 @@ class InterviewState(BaseModel):
         default_factory=list
     )
     audio_url: str | None = None
+    history: list[InterviewTurn] = Field(
+        default_factory=list
+    )
 
 
 class InterviewAnswerResponse(BaseModel):

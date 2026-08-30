@@ -1,23 +1,26 @@
-import json
+"""
+Interview service — orchestrates the voice interview flow.
 
-from langchain_ollama import ChatOllama
+Uses the InterviewAgent to make intelligent decisions about
+answer sufficiency and next questions.
+"""
 
+import logging
+
+from app.agents.interview_agent import InterviewAgent, ALLOWED_FIELDS
 from app.schemas import (
     Evidence,
-    ExtractionResult,
     InterviewQuestion,
     InterviewState,
+    InterviewTurn,
 )
+from app.schemas.interview_decision import InterviewDecision
 
 
-MODEL_NAME = "llama3.1:8b"
+logger = logging.getLogger(__name__)
 
 
-llm = ChatOllama(
-    model=MODEL_NAME,
-    temperature=0,
-)
-
+# Default questions used for starting the interview and as fallback.
 INTERVIEW_QUESTIONS = [
     InterviewQuestion(
         field="company_name",
@@ -52,63 +55,9 @@ INTERVIEW_QUESTIONS = [
 ]
 
 
-def extract_answer(
-    question: InterviewQuestion,
-    transcript: str,
-) -> ExtractionResult:
-    """
-    Extract information only for the field currently being asked.
+# Singleton agent instance.
+_agent = InterviewAgent()
 
-    The model must not infer or invent information that is not clearly
-    established by the applicant's transcript.
-    """
-    prompt = f"""
-You are extracting one piece of information from an applicant's
-spoken answer for a funding application.
-
-Target field: {question.field}
-
-Question asked:
-{question.question}
-
-Applicant transcript:
-{transcript}
-
-Extract only information relevant to the target field.
-
-Return only valid JSON with this exact structure:
-
-{{
-    "value": string or null,
-    "ambiguous": boolean
-}}
-
-Rules:
-- Do not invent or infer missing facts.
-- If the answer clearly establishes the requested value, return it.
-- If the requested information is not established, return null for
-  value.
-- If the answer is vague or ambiguous, set ambiguous to true.
-- Do not extract information for other application fields.
-- Do not include markdown or explanations.
-
-Example:
-
-{{
-    "value": "Adama Furniture Manufacturing",
-    "ambiguous": false
-}}
-"""
-
-    response = llm.invoke(prompt)
-
-    raw_response = str(response.content)
-
-    parsed_response = json.loads(raw_response)
-
-    return ExtractionResult.model_validate(
-        parsed_response
-    )
 
 def start_interview() -> InterviewState:
     state = InterviewState()
@@ -118,63 +67,155 @@ def start_interview() -> InterviewState:
     return state
 
 
+def get_next_question(
+    completed_fields: list[str],
+) -> InterviewQuestion | None:
+    """Deterministic fallback: pick the first unanswered question."""
+    for question in INTERVIEW_QUESTIONS:
+        if question.field not in completed_fields:
+            return question
+
+    return None
+
+
+def _compute_gaps(
+    state: InterviewState,
+) -> list[str]:
+    """Return list of field names that are still missing."""
+    return [
+        f
+        for f in ALLOWED_FIELDS
+        if f not in state.completed_fields
+    ]
+
+
 def process_interview_answer(
     state: InterviewState,
     transcript: str,
 ) -> InterviewState:
     """
-    Process one interview answer and update only the current target
-    field when the information is clearly established.
+    Process one interview answer using the interview agent.
+
+    Flow:
+    1. Agent evaluates the transcript
+    2. Validated field updates are applied
+    3. Evidence is recorded
+    4. History is appended
+    5. Next question is determined
     """
     current_question = state.current_question
 
     if current_question is None:
         return state
 
-    extraction = extract_answer(
-        question=current_question,
+    gaps = _compute_gaps(state)
+
+    # --- Ask the agent ---
+    decision: InterviewDecision = _agent.decide(
+        application=state.application,
+        gaps=gaps,
+        current_question=current_question,
         transcript=transcript,
+        history=state.history,
     )
 
-    field = current_question.field
+    logger.info(
+        "Agent decision: quality=%s, follow_up=%s, next=%s",
+        decision.answer_quality,
+        decision.follow_up_required,
+        decision.next_field,
+    )
 
+    # --- Apply extracted updates ---
+    for field, value in decision.extracted_updates.items():
+        if value is not None and field in ALLOWED_FIELDS:
+            update_application_field(
+                state=state,
+                field=field,
+                value=value,
+            )
+
+    # --- Record evidence ---
     state.application.evidence.append(
         Evidence(
             source="voice",
             value={
-                "field": field,
+                "field": current_question.field,
                 "transcript": transcript,
-                "extracted_value": extraction.value,
-                "established": extraction.value is not None,
-                "ambiguous": extraction.ambiguous,
+                "extracted_updates": decision.extracted_updates,
+                "answer_quality": decision.answer_quality,
+                "follow_up_required": decision.follow_up_required,
             },
         )
     )
 
-    if extraction.value is not None:
-        update_application_field(
-            state=state,
-            field=field,
-            value=extraction.value,
+    # --- Append to history ---
+    state.history.append(
+        InterviewTurn(
+            field=current_question.field,
+            question=current_question.question,
+            transcript=transcript,
         )
+    )
 
-        state.completed_fields.append(field)
+    # --- Determine next question ---
+    if decision.answer_quality == "sufficient":
+        # Mark field as completed.
+        if current_question.field not in state.completed_fields:
+            state.completed_fields.append(
+                current_question.field
+            )
 
-        state.current_question = get_next_question(
-            completed_fields=state.completed_fields,
-        )
+        # Check if all fields are now complete.
+        remaining = [
+            f for f in ALLOWED_FIELDS
+            if f not in state.completed_fields
+        ]
+
+        if not remaining:
+            # Interview is complete.
+            state.current_question = None
+        elif (
+            decision.next_field is not None
+            and decision.next_question is not None
+            and decision.next_field in remaining
+        ):
+            # Use agent's suggestion only if the field
+            # is actually still missing.
+            state.current_question = InterviewQuestion(
+                field=decision.next_field,
+                question=decision.next_question,
+            )
+        else:
+            state.current_question = get_next_question(
+                completed_fields=state.completed_fields,
+            )
+
+
+    else:
+        # Insufficient or unclear — stay on current field
+        # or use agent's follow-up.
+        if (
+            decision.follow_up_required
+            and decision.next_question is not None
+        ):
+            follow_up_field = (
+                decision.next_field
+                or current_question.field
+            )
+
+            state.current_question = InterviewQuestion(
+                field=follow_up_field,
+                question=decision.next_question,
+            )
+        else:
+            # Fallback: re-ask the same question.
+            state.current_question = InterviewQuestion(
+                field=current_question.field,
+                question=current_question.question,
+            )
 
     return state
-
-
-def get_next_question(
-    completed_fields: list[str],
-) -> InterviewQuestion | None:
-    for question in INTERVIEW_QUESTIONS:
-        if question.field not in completed_fields:
-            return question
-
-    return None
 
 
 def update_application_field(
@@ -203,7 +244,7 @@ def update_application_field(
             company_profile.number_of_years_in_operation = int(
                 value
             )
-        except ValueError:
+        except (ValueError, TypeError):
             pass
 
     elif field == "funding_problem":
