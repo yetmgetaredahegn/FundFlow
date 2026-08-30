@@ -1,3 +1,5 @@
+import json
+
 import requests
 
 
@@ -5,16 +7,10 @@ API_BASE_URL = "http://127.0.0.1:8000"
 
 
 def process_application(
-    audio_file,
     license_image,
     workshop_image,
 ):
     files = {
-        "audio_file": (
-            audio_file.name,
-            audio_file.getvalue(),
-            audio_file.type,
-        ),
         "license_image": (
             license_image.name,
             license_image.getvalue(),
@@ -53,6 +49,8 @@ def submit_interview_answer(
     state,
     audio_file,
 ):
+    state_json = json.dumps(state)
+
     files = {
         "audio_file": (
             audio_file.name,
@@ -61,13 +59,11 @@ def submit_interview_answer(
         ),
     }
 
-    data = {
-        "state": state,
-    }
-
     response = requests.post(
         f"{API_BASE_URL}/interview/answer",
-        data=data,
+        data={
+            "state": state_json,
+        },
         files=files,
         timeout=180,
     )
@@ -83,8 +79,9 @@ def get_audio_url(
     if not audio_url:
         return None
 
-    if audio_url.startswith("http://") or audio_url.startswith(
-        "https://"
+    if (
+        audio_url.startswith("http://")
+        or audio_url.startswith("https://")
     ):
         return audio_url
 

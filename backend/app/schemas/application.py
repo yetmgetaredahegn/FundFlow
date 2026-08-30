@@ -13,10 +13,9 @@ class FileMetadata(BaseModel):
 
 
 class ApplicationFiles(BaseModel):
-    audio: FileMetadata
+    audio: FileMetadata | None = None
     license: FileMetadata
     workshop: FileMetadata
-
 
 class ApplicationData(BaseModel):
     applicant: ApplicantDescription = Field(

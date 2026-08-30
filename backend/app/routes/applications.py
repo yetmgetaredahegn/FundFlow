@@ -15,12 +15,10 @@ router = APIRouter(
     response_model=ApplicationResponse,
 )
 async def process_application_route(
-    audio_file: UploadFile = File(...),
     license_image: UploadFile = File(...),
     workshop_image: UploadFile = File(...),
 ) -> ApplicationResponse:
     return await process_application(
-        audio_file=audio_file,
         license_image=license_image,
         workshop_image=workshop_image,
     )

@@ -50,12 +50,10 @@ async def save_upload_to_temporary_file(
         return Path(temporary_file.name)
 
 async def process_application(
-    audio_file: UploadFile,
     license_image: UploadFile,
     workshop_image: UploadFile,
 ) -> ApplicationResponse:
     validate_file_types(
-        audio_file=audio_file,
         license_image=license_image,
         workshop_image=workshop_image,
     )
@@ -63,10 +61,6 @@ async def process_application(
     application = build_mock_application()
 
     files = ApplicationFiles(
-        audio=FileMetadata(
-            filename=audio_file.filename or "unknown",
-            content_type=audio_file.content_type or "unknown",
-        ),
         license=FileMetadata(
             filename=license_image.filename or "unknown",
             content_type=license_image.content_type or "unknown",
@@ -317,19 +311,9 @@ def build_mock_information_gaps() -> list[InformationGap]:
 
 
 def validate_file_types(
-    audio_file: UploadFile,
     license_image: UploadFile,
     workshop_image: UploadFile,
 ) -> None:
-    if (
-        not audio_file.content_type
-        or not audio_file.content_type.startswith("audio/")
-    ):
-        raise HTTPException(
-            status_code=400,
-            detail="audio_file must be an audio file.",
-        )
-
     if (
         not license_image.content_type
         or not license_image.content_type.startswith("image/")
