@@ -4,6 +4,11 @@ from app.schemas.application import (
     ApplicationResponse,
     FileMetadata,
 )
+from app.schemas.interview import (
+    InterviewQuestion,
+    InterviewState,
+)
+from app.schemas.extraction import ExtractionResult
 from app.schemas.company import (
     ApplicantDescription,
     BusinessOrganization,
@@ -44,6 +49,7 @@ __all__ = [
     "CompanyProfile",
     "Evidence",
     "ExpectedResult",
+    "ExtractionResult",
     "FileMetadata",
     "Gender",
     "GrowthIndicator",
@@ -57,5 +63,7 @@ __all__ = [
     "ProductUniqueness",
     "RequestedConsultant",
     "RequestedEquipment",
+    "InterviewQuestion",
+    "InterviewState",
     "TranscriptionResult",
 ]
