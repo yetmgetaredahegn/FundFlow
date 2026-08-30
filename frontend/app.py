@@ -154,6 +154,19 @@ if interview_state:
     # -----------------------------------------------------------------------
 
     else:
+        # -------------------------------------------------------------------
+        # Chat History
+        # -------------------------------------------------------------------
+        history = interview_state.get("history", [])
+        if history:
+            st.markdown("### Interview Transcript")
+            for i, turn in enumerate(history):
+                with st.chat_message("assistant"):
+                    st.write(turn["question"])
+                with st.chat_message("user"):
+                    st.write(turn["transcript"])
+            st.divider()
+
         completed_fields = interview_state.get(
             "completed_fields",
             [],

@@ -133,10 +133,11 @@ INSTRUCTIONS:
    - A clear, complete answer is SUFFICIENT.
 3. If the answer is insufficient or unclear, set follow_up_required to true
    and generate a follow-up question that explicitly states what the user just said, explains why it is confusing or insufficient, and asks for the specific missing detail.
+   - You MUST put this follow-up question in the `next_question` JSON field.
    - Example for company_name: "You mentioned 'Abebe', but that sounds like a personal name rather than a registered PLC or business name. Could you please provide the full legal name of your business?"
    - Example for description: "You mentioned 'we sell stuff', but I need to know the specific type of products or industry you are in. Could you clarify what exactly you sell?"
 4. If the answer is sufficient, choose the next MISSING field and write a
-   natural question for it.
+   natural question for it, and put it in the `next_question` field.
 5. If ALL fields are filled, set next_field and next_question to null.
 
 Return ONLY valid JSON with this exact structure:
