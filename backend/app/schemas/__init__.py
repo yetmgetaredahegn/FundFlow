@@ -5,7 +5,9 @@ from app.schemas.application import (
     FileMetadata,
 )
 from app.schemas.interview import (
+    InterviewAnswerResponse,
     InterviewQuestion,
+    InterviewStartResponse,
     InterviewState,
 )
 from app.schemas.extraction import ExtractionResult
@@ -64,6 +66,8 @@ __all__ = [
     "RequestedConsultant",
     "RequestedEquipment",
     "InterviewQuestion",
+    "InterviewAnswerResponse",
     "InterviewState",
+    "InterviewStartResponse",
     "TranscriptionResult",
 ]

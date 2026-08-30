@@ -3,6 +3,14 @@ __pycache__/
 *.py[cod]
 *.pyo
 
+
+# Local audio recordings and generated audio
+*.m4a
+*.wav
+backend/generated_audio/
+demo/
+interview-state.json
+
 # Virtual environments
 .venv/
 venv/

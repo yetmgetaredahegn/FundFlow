@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
-
 from app.schemas.application import ApplicationData
+from app.schemas.evidence import TranscriptionResult
+
+from pydantic import BaseModel, Field
 
 
 class InterviewQuestion(BaseModel):
@@ -16,3 +17,9 @@ class InterviewState(BaseModel):
     completed_fields: list[str] = Field(
         default_factory=list
     )
+    audio_url: str | None = None
+
+
+class InterviewAnswerResponse(BaseModel):
+    state: InterviewState
+    transcript: TranscriptionResult
